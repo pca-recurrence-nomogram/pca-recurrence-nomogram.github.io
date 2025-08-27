@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Prediction Nomogram for Prostate Cancer Recurrence</title>
+
+<!-- Inter (with system-ui fallback) -->
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+
+<style>
+  :root{
+    --bg: #F8F6F1;           /* deep slate */
+    --bg-soft: #d8e2e5;      /* card bg (dark) */
+    --text: mix(#000, #7a8288, 40%);
+    --muted: mix(#000, #7a8288, 40%);
+    --border: #5B7E91;
+    --brand: #7c9fa7;        /* indigo-ish (Claude-esque) */
+    --brand-2:#c83f42;       /* teal accent */
+    --ring-bg:#0f1528;
+    --ok:#7abd7e; --warn:#ffb54c; --bad:#f9645f;
+    --focus: 0 0 0 3px rgba(124,154,255,.35), 0 1px 2px rgba(0,0,0,.2);
+    --radius: 16px;
+  }
+  @media (prefers-color-scheme: light) {
+    :root{
+      --bg: #f7f8fb;
+      --bg-soft:#ffffff;
+      --text:#0e1320;
+      --muted:#5b6478;
+      --border:#e8ecf3;
+      --ring-bg:#f0f3fa;
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; font:16px/1.4 "Inter", "Source Serif 4", system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Apple Color Emoji","Segoe UI Emoji";
+    color:var(--text); background:radial-gradient(1200px 500px at 10% -20%, rgba(124,154,255,.12), transparent 60%),
+                       radial-gradient(900px 400px at 110% -10%, rgba(94,225,214,.10), transparent 60%),
+                       var(--bg);
+  }
+  .wrap{max-width:1100px; margin:48px auto; padding:0 24px}
+  header{display:flex; align-items:flex-start; gap:16px; margin-bottom:28px}
+  .badge{font-weight:600; color:#0b1020; background:linear-gradient(135deg,var(--brand),var(--brand-2)); padding:4px 10px; border-radius:999px; font-size:12px; letter-spacing:.2px}
+  h1{font-size:28px; line-height:1.2; margin:0}
+  .sub{color:var(--muted); font-size:14px; margin-top:6px}
+
+  .grid{
+    display:grid; gap:22px;
+    grid-template-columns: 1.1fr .9fr;
+  }
+  @media (max-width: 900px){ .grid{grid-template-columns:1fr} }
+
+  .card{
+    background:var(--bg-soft); border:1px solid var(--border);
+    border-radius:var(--radius); padding:20px;
+    box-shadow: 0 10px 24px rgba(0,0,0,.08);
+  }
+  .section-title{font-size:13px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.12em; margin:0 0 12px}
+
+  /* Field block */
+  .field{display:grid; gap:8px; margin:14px 0 18px}
+  .row{display:flex; gap:12px; align-items:center; flex-wrap:wrap}
+  label{font-weight:600}
+  .help{color:var(--muted); font-size:13px}
+  .control{display:flex; align-items:center; gap:10px; width:100%}
+  .numwrap{
+    display:flex; align-items:center; gap:8px; border:1px solid var(--border);
+    background:rgba(255,255,255,.02); padding:10px 12px; border-radius:12px; width:220px;
+  }
+  .numwrap input[type="number"]{
+    background:transparent; color:var(--text); border:0; outline:none; width:100%;
+    font:600 16px/1 Inter, system-ui;
+    -moz-appearance:textfield;
+  }
+  .numwrap input::-webkit-outer-spin-button,
+  .numwrap input::-webkit-inner-spin-button{ -webkit-appearance: none; margin: 0; }
+  .unit{font-size:13px; color:var(--muted)}
+  input[type="range"]{
+    -webkit-appearance:none; appearance:none; height:6px; flex:1;
+    background:linear-gradient(90deg, var(--brand), var(--brand-2));
+    border-radius:999px; outline:none; opacity:.95;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none; width:20px; height:20px;
+    background:var(--bg-soft); border:2px solid var(--brand); border-radius:50%;
+    box-shadow:0 1px 2px rgba(0,0,0,.25);
+  }
+  input[type="range"]::-moz-range-thumb{
+    width:20px;height:20px;background:var(--bg-soft);border:2px solid var(--brand);border-radius:50%
+  }
+
+  /* Buttons */
+  .actions{display:flex; gap:12px; margin-top:8px}
+  .btn{
+    cursor:pointer; border:1px solid var(--border); color:var(--text);
+    background:linear-gradient(180deg, rgba(124,154,255,.18), rgba(124,154,255,.08));
+    padding:10px 14px; border-radius:12px; font-weight:600;
+    transition: transform .06s ease, box-shadow .06s ease;
+  }
+  .btn.primary{border-color:transparent; background:linear-gradient(135deg,var(--brand),var(--brand-2)); color:#0b1020}
+  .btn:focus-visible{box-shadow:var(--focus)}
+  .btn:active{transform:translateY(1px)}
+
+  /* Result panel */
+  .sticky{position:sticky; top:18px}
+  .result{
+    display:grid; gap:16px; align-items:center; grid-template-columns: 120px 1fr;
+  }
+  .ring{
+    --deg:0deg;
+    width:120px; height:120px; border-radius:50%;
+    background: conic-gradient(var(--brand) var(--deg), var(--ring-bg) 0);
+    display:grid; place-items:center; border:1px solid var(--border);
+  }
+  .ring .inner{
+    width:94px; height:94px; border-radius:50%;
+    background:var(--bg-soft); display:grid; place-items:center;
+    font-weight:700; font-size:22px;
+  }
+  .kpis{display:grid; gap:10px}
+  .krow{display:flex; align-items:center; gap:8px}
+  .pill{
+    padding:4px 8px; border-radius:999px; font-weight:600; font-size:12px; letter-spacing:.2px;
+    border:1px solid var(--border); color:var(--text)
+  }
+  .pill.ok{background:rgba(16,185,129,.12); border-color:rgba(16,185,129,.25); color: var(--text)}
+  .pill.warn{background:rgba(245,158,11,.12); border-color:rgba(245,158,11,.25); color:var(--text)}
+  .pill.bad{background:rgba(239,68,68,.12); border-color:rgba(239,68,68,.25); color:var(--text)}
+  .small{font-size:11px; color:var(--text)}
+
+  footer{margin-top:24px; color:var(--muted); font-size:12px}
+  .hr{height:1px; background:var(--border); margin:14px 0}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <!-- <div class="badge">Logistic regression</div> -->
+      <div>
+        <h1>Prediction Nomogram for Prostate Cancer Recurrence</h1>
+        <div class="sub"><b>INSTRUCTIONS</b>: This model is intended for use post-radiation therapy, when a patient's PSA <b>first</b> rises above 1.0 ng/mL. The model estimates the probability of clinically significant recurrence within 5 years of the first PSA measurement above 1.0 ng/mL. 
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- LEFT: form -->
+      <section class="card">
+        <p class="section-title">Inputs</p>
+
+        <!-- Field 1 -->
+        <div class="field" id="f-x1">
+          <div class="row"><label for="x1_num">NCCN risk category</label></div>
+          <div class="help">Use an integer code (e.g., 1–5). Adjust via slider or type a value.</div>
+          <div class="control">
+            <input id="x1_range" type="range" min="1" max="5" step="1" value="1" aria-labelledby="x1_num">
+            <div class="numwrap"><input id="x1_num" type="number" inputmode="decimal" step="1" min="1" max="5" value="r"><span class="unit">score</span></div>
+          </div>
+        </div>
+
+        <!-- Field 2 -->
+        <div class="field" id="f-x2">
+          <div class="row"><label for="x2_num">Time between RT end and first PSA &gt; 1.0</label></div>
+          <div class="help">Months from end of radiation treatment to first PSA above 1.0 ng/mL.</div>
+          <div class="control">
+            <input id="x2_range" type="range" min="0" max="60" step="1" value="0" aria-labelledby="x2_num">
+            <div class="numwrap"><input id="x2_num" type="number" inputmode="decimal" step="1" min="0" value="0"><span class="unit">months</span></div>
+          </div>
+        </div>
+
+        <!-- Field 3 -->
+        <div class="field" id="f-x3">
+          <div class="row"><label for="x3_num">First PSA measurement &gt; 1.0</label></div>
+          <div class="help">The first PSA measurement above 1.0 ng/mL following end of radiation treatment.</div>
+          <div class="control">
+            <input id="x3_range" type="range" min="1" max="20" step="0.1" value="1.0" aria-labelledby="x3_num">
+            <div class="numwrap"><input id="x3_num" type="number" inputmode="decimal" step="0.1" min="1" value="1.0"><span class="unit">ng/mL</span></div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <!-- <button class="btn primary" id="calc" type="button">Compute</button> -->
+          <button class="btn" id="reset" type="button" title="Reset inputs">Reset</button>
+        </div>
+      </section>
+
+      <!-- RIGHT: result -->
+      <aside class="card sticky" aria-live="polite">
+        <p class="section-title">Result</p>
+        <div class="result">
+          <div class="ring" id="ring"><div class="inner" id="p">—</div></div>
+          <div class="kpis">
+            <div class="krow"><span class="pill" id="bucket">—</span></div>
+            <div id="caption" style="font-size: 13px;">Estimated probability of clinically significant recurrence within 5 years.</div>
+            <!-- <div class="hr"></div>
+            <div class="small">
+              This is a simple demonstration UI. Replace coefficients with your model’s values.
+              No data is sent anywhere; everything runs in your browser.
+            </div> -->
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <footer>
+      <div class="hr"></div>
+      <div>Created by the Mayo Clinic Radiation Oncology AI & Data Analytics team. v1.0 demo.</div>
+    </footer>
+  </div>
+
+<script>
+  // === Normalization params (from training) ===
+  const ORD_RISK_MAP = {1:0, 2:1, 3:2, 4:3, 5:4};   // ordinal encoding
+  const RS = {
+    last_value:        {median: 1.5000, iqr: 1.2000},
+    time_rtend_rising: {median: 2.8830, iqr: 3.5674} // NOTE: training in YEARS
+  };
+
+  // === Model coefficients trained on SCALED features ===
+  // Replace with your real values
+  const B0 = -0.9153, B1 = 0.899107, B2 = 0.399464, B3 = 1.225717; // [risk_ord, last_value_scaled, time_scaled]
+
+  // Helpers
+  const σ = z => 1/(1+Math.exp(-z));
+  const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+  const el = id => document.getElementById(id);
+
+  // Elements
+  const x1n = el('x1_num'), x1r = el('x1_range');
+  const x2n = el('x2_num'), x2r = el('x2_range');  // months in UI
+  const x3n = el('x3_num'), x3r = el('x3_range');
+  const out = el('p'), ring = el('ring'), bucket = el('bucket'), caption = el('caption');
+
+  // Keep number and slider synced
+  function syncPair(numEl, rangeEl){
+    numEl.addEventListener('input', () => {
+      const v = numEl.value === '' ? '' : +numEl.value;
+      if (v === '') { rangeEl.value = rangeEl.min; update(); return; }
+      rangeEl.value = clamp(+v, +rangeEl.min, +rangeEl.max);
+      update();
+    });
+    rangeEl.addEventListener('input', () => { numEl.value = rangeEl.value; update(); });
+  }
+  syncPair(x1n, x1r); syncPair(x2n, x2r); syncPair(x3n, x3r);
+
+  function classify(p){
+    if (p < 0.33) return {text:'Low probability', cls:'ok'};
+    if (p < 0.66) return {text:'Moderate probability', cls:'warn'};
+    return {text:'High probability', cls:'bad'};
+  }
+
+  function clearUI() {
+    out.textContent = '—';
+    ring.style.setProperty('--deg', '0deg');
+    bucket.textContent = '—'; bucket.className = 'pill';
+    caption.textContent = 'Set all parameters to calculate the probability.';
+  }
+
+  // === Transform raw UI inputs -> model features ===
+  function toModelFeatures(rawRisk, rawLastValue, rawTimeMonths){
+    // 1) Ordinal encode risk
+    const riskOrd = ORD_RISK_MAP[rawRisk];
+    if (riskOrd === undefined) throw new Error('Risk category must be an integer 1–5.');
+
+    // 2) Convert months -> years for time_rtend_rising to match training
+    const timeYears = rawTimeMonths / 12;
+
+    // 3) Robust scale numerics: (x - median) / IQR
+    //    Guard against zero IQR, although yours are non-zero.
+    const lastScaled = (rawLastValue - RS.last_value.median) / RS.last_value.iqr;
+    const timeScaled = (timeYears     - RS.time_rtend_rising.median) / RS.time_rtend_rising.iqr;
+
+    return {riskOrd, lastScaled, timeScaled};
+  }
+
+  // Basic validation
+  function validateInputs(x1, x2, x3) {
+    const errs = [];
+    if (!Number.isInteger(x1) || x1 < 1 || x1 > 5) errs.push("Risk category must be an integer from 1 to 5.");
+    if (!(x2 > 0)) errs.push("Time between RT end and first PSA must be greater than 0 (months).");
+    if (!(x3 >= 1)) errs.push("First PSA measurement must be ≥ 1.");
+    return errs;
+  }
+
+  function update(){
+    const riskIn   = parseFloat(x1n.value);
+    const lastIn   = parseFloat(x3n.value);         // your UI: first PSA measurement
+    const timeMIn  = parseFloat(x2n.value);         // months
+
+    if (![riskIn,lastIn,timeMIn].every(Number.isFinite)){ clearUI(); return; }
+
+    const errs = validateInputs(riskIn, timeMIn, lastIn);
+    if (errs.length) {
+      bucket.textContent = 'Fix inputs'; bucket.className = 'pill bad';
+      caption.innerHTML = '<ul style="margin:0;padding-left:18px">' + errs.map(e=>`<li>${e}</li>`).join('') + '</ul>';
+      out.textContent = '—'; ring.style.setProperty('--deg', '0deg');
+      return;
+    }
+
+    // === Apply conversions + scaling before feeding the model ===
+    const {riskOrd, lastScaled, timeScaled} = toModelFeatures(riskIn, lastIn, timeMIn);
+
+    // Order must match your training feature order: [risk_ord, last_value_scaled, time_scaled]
+    const z = B0 + B1*riskOrd + B2*lastScaled + B3*timeScaled;
+    const p = σ(z);
+
+    out.textContent = (p*100).toFixed(1) + '%';
+    ring.style.setProperty('--deg', (p*360).toFixed(1) + 'deg');
+
+    const {text, cls} = classify(p);
+    bucket.textContent = text; bucket.className = 'pill ' + cls;
+
+    // Optional: show how inputs were transformed (handy for debugging)
+    // caption.textContent = `risk_ord=${riskOrd}, last'=${lastScaled.toFixed(3)}, time'=${timeScaled.toFixed(3)}`;
+  }
+
+  el('calc').addEventListener('click', update);
+  el('reset').addEventListener('click', () => {
+    x1r.value = x1n.value = 1;      // risk defaults to 1..5
+    x2r.value = x2n.value = 1;      // 1 month
+    x3r.value = x3n.value = 1.0;    // 1.0 ng/mL
+    update();
+  });
+
+  // initial
+  update();
+</script>
+
+</body>
+</html>
