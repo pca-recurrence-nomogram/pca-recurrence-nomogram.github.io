@@ -11,6 +11,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 
+<!-- Flatpickr core CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<!-- MonthSelect plugin CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
+
 <style>
   :root{
     --bg: #F8F6F1;           /* deep slate */
@@ -70,7 +75,7 @@
   .control{display:flex; align-items:center; gap:10px; width:100%}
   .numwrap{
     display:flex; align-items:center; gap:8px; border:1px solid var(--border);
-    background:rgba(255,255,255,.02); padding:10px 12px; border-radius:12px; width:220px;
+    background:rgba(255,255,255,.02); padding:10px 12px; border-radius:12px; width:110px;
   }
   .numwrap input[type="number"]{
     background:transparent; color:var(--text); border:0; outline:none; width:100%;
@@ -131,10 +136,63 @@
   .pill.ok{background:rgba(16,185,129,.12); border-color:rgba(16,185,129,.25); color: var(--text)}
   .pill.warn{background:rgba(245,158,11,.12); border-color:rgba(245,158,11,.25); color:var(--text)}
   .pill.bad{background:rgba(239,68,68,.12); border-color:rgba(239,68,68,.25); color:var(--text)}
-  .small{font-size:11px; color:var(--text)}
+  .small{font-size:13px; color:var(--text)}
 
   footer{margin-top:24px; color:var(--muted); font-size:12px}
   .hr{height:1px; background:var(--border); margin:14px 0}
+
+  .clean-select {
+    width: 260px;
+    padding: 12px 14px;
+    font-size: 15px;          /* bump up from 16px → 16–18px */
+    font-weight: 500;         /* bolder for readability */
+    border-radius: 8px;       /* smaller radius → cleaner look */
+    border: 1px solid var(--border);
+    background-color: var(--bg-soft);
+    color: var(--text);
+
+    /* remove skeuomorphic gradients / shadows */
+    box-shadow: none;
+    appearance: none;         /* remove default OS styling */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    /* optional: add a simple caret */
+    background-image: url("data:image/svg+xml;utf8,<svg fill='%23a9b0c3' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px 16px;
+    padding-right: 36px; /* space for caret */
+  }
+
+  .clean-select,
+  .clean-select option {
+    font-family: "Inter", system-ui, sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    font-size: 14px;
+  }
+
+  .clean-select:focus {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: var(--focus);
+  }
+
+  .flatpickr-calendar {
+    font-family: "Inter", system-ui, sans-serif;
+    font-size: 14px;           /* base font smaller */
+  }
+
+  .flatpickr-monthSelect-months {
+    grid-template-columns: repeat(3, 1fr); /* 3 columns instead of 4 */
+    gap: 4px;
+  }
+
+  .flatpickr-monthSelect-month {
+    padding: 4px 6px;
+    font-weight: 500;
+  }
 </style>
 </head>
 <body>
@@ -152,55 +210,48 @@
       <section class="card">
         <p class="section-title">Inputs</p>
 
-        <!-- Field 1 -->
+        <!-- Risk category -->
         <div class="field" id="f-x1">
-          <div class="row"><label for="x1_num">NCCN risk category</label></div>
-          <div class="help">Use an integer code (e.g., 1–5). Adjust via slider or type a value.</div>
-          <div class="control">
-            <input id="x1_range" type="range" min="1" max="5" step="1" value="1" aria-labelledby="x1_num">
-            <div class="numwrap"><input id="x1_num" type="number" inputmode="decimal" step="1" min="1" max="5" value="r"><span class="unit">score</span></div>
-          </div>
+          <div class="row"><label for="risk_select">NCCN risk category</label></div>
+          <select id="risk_select" class="clean-select">
+            <option>Low</option>
+            <option>Favorable Intermediate</option>
+            <option>Unfavorable Intermediate</option>
+            <option>High</option>
+            <option>Very High</option>
+          </select>
         </div>
 
-        <!-- Field 2 -->
-        <div class="field" id="f-x2">
-          <div class="row"><label for="x2_num">Time between RT end and first PSA &gt; 1.0</label></div>
-          <div class="help">Months from end of radiation treatment to first PSA above 1.0 ng/mL.</div>
-          <div class="control">
-            <input id="x2_range" type="range" min="0" max="60" step="1" value="0" aria-labelledby="x2_num">
-            <div class="numwrap"><input id="x2_num" type="number" inputmode="decimal" step="1" min="0" value="0"><span class="unit">months</span></div>
-          </div>
+        <div class="field">
+          <div class="row"><label for="rt_end">Radiation therapy end date</label></div>
+          <input id="rt_end" placeholder="Select month/year" style="width:220px;padding:10px;border-radius:12px;border:1px solid var(--border)">
+        </div>
+
+        <div class="field">
+          <div class="row"><label for="psa_first">Date of first PSA measurement > 1.0 ng/mL</label></div>
+          <input id="psa_first" placeholder="Select month/year" style="width:220px;padding:10px;border-radius:12px;border:1px solid var(--border)">
         </div>
 
         <!-- Field 3 -->
         <div class="field" id="f-x3">
-          <div class="row"><label for="x3_num">First PSA measurement &gt; 1.0</label></div>
-          <div class="help">The first PSA measurement above 1.0 ng/mL following end of radiation treatment.</div>
+          <div class="row"><label for="x3_num">First PSA value > 1.0 ng/mL after radiation therapy end</label></div>
+          <!-- <div class="help">Value of first PSA measurement above 1.0 ng/mL following end of radiation treatment.</div> -->
           <div class="control">
             <input id="x3_range" type="range" min="1" max="20" step="0.1" value="1.0" aria-labelledby="x3_num">
             <div class="numwrap"><input id="x3_num" type="number" inputmode="decimal" step="0.1" min="1" value="1.0"><span class="unit">ng/mL</span></div>
           </div>
         </div>
 
-        <div class="actions">
-          <!-- <button class="btn primary" id="calc" type="button">Compute</button> -->
-          <button class="btn" id="reset" type="button" title="Reset inputs">Reset</button>
-        </div>
       </section>
 
       <!-- RIGHT: result -->
       <aside class="card sticky" aria-live="polite">
-        <p class="section-title">Result</p>
+        <p class="section-title">Score</p>
         <div class="result">
           <div class="ring" id="ring"><div class="inner" id="p">—</div></div>
           <div class="kpis">
             <div class="krow"><span class="pill" id="bucket">—</span></div>
             <div id="caption" style="font-size: 13px;">Estimated probability of clinically significant recurrence within 5 years.</div>
-            <!-- <div class="hr"></div>
-            <div class="small">
-              This is a simple demonstration UI. Replace coefficients with your model’s values.
-              No data is sent anywhere; everything runs in your browser.
-            </div> -->
           </div>
         </div>
       </aside>
@@ -213,30 +264,36 @@
   </div>
 
 <script>
-  // === Normalization params (from training) ===
-  const ORD_RISK_MAP = {1:0, 2:1, 3:2, 4:3, 5:4};   // ordinal encoding
+  // ======= Constants from training =======
+  const ORD_RISK_MAP = {
+    "Low": 0,
+    "Favorable Intermediate": 1,
+    "Unfavorable Intermediate": 2,
+    "High": 3,
+    "Very High": 4
+  };
   const RS = {
     last_value:        {median: 1.5000, iqr: 1.2000},
-    time_rtend_rising: {median: 2.8830, iqr: 3.5674} // NOTE: training in YEARS
+    time_rtend_rising: {median: 2.8830, iqr: 3.5674}
   };
+  // Coeffs in SCALED space: [risk_ord, last_value_scaled, time_scaled]
+  const B0 = -0.9153, B1 = 0.899107, B2 = 0.399464, B3 = 1.225717;
 
-  // === Model coefficients trained on SCALED features ===
-  // Replace with your real values
-  const B0 = -0.9153, B1 = 0.899107, B2 = 0.399464, B3 = 1.225717; // [risk_ord, last_value_scaled, time_scaled]
-
-  // Helpers
+  // ======= Helpers & elements =======
   const σ = z => 1/(1+Math.exp(-z));
-  const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   const el = id => document.getElementById(id);
 
-  // Elements
-  const x1n = el('x1_num'), x1r = el('x1_range');
-  const x2n = el('x2_num'), x2r = el('x2_range');  // months in UI
-  const x3n = el('x3_num'), x3r = el('x3_range');
+  const riskSel = el('risk_select');
+  const rtEnd   = el('rt_end');       // <-- use same id as Flatpickr
+  const psaYM   = el('psa_first');    // <-- use same id as Flatpickr
+  const x3n = el('x3_num');
+  const x3r = el('x3_range');
+
   const out = el('p'), ring = el('ring'), bucket = el('bucket'), caption = el('caption');
 
-  // Keep number and slider synced
   function syncPair(numEl, rangeEl){
+    if (!numEl || !rangeEl) return;
     numEl.addEventListener('input', () => {
       const v = numEl.value === '' ? '' : +numEl.value;
       if (v === '') { rangeEl.value = rangeEl.min; update(); return; }
@@ -245,89 +302,114 @@
     });
     rangeEl.addEventListener('input', () => { numEl.value = rangeEl.value; update(); });
   }
-  syncPair(x1n, x1r); syncPair(x2n, x2r); syncPair(x3n, x3r);
+  syncPair(x3n, x3r);
 
   function classify(p){
     if (p < 0.33) return {text:'Low probability', cls:'ok'};
     if (p < 0.66) return {text:'Moderate probability', cls:'warn'};
     return {text:'High probability', cls:'bad'};
   }
-
-  function clearUI() {
+  function clearUI(){
     out.textContent = '—';
-    ring.style.setProperty('--deg', '0deg');
+    ring.style.setProperty('--deg','0deg');
     bucket.textContent = '—'; bucket.className = 'pill';
     caption.textContent = 'Set all parameters to calculate the probability.';
   }
-
-  // === Transform raw UI inputs -> model features ===
-  function toModelFeatures(rawRisk, rawLastValue, rawTimeMonths){
-    // 1) Ordinal encode risk
-    const riskOrd = ORD_RISK_MAP[rawRisk];
-    if (riskOrd === undefined) throw new Error('Risk category must be an integer 1–5.');
-
-    // 2) Convert months -> years for time_rtend_rising to match training
-    const timeYears = rawTimeMonths / 12;
-
-    // 3) Robust scale numerics: (x - median) / IQR
-    //    Guard against zero IQR, although yours are non-zero.
-    const lastScaled = (rawLastValue - RS.last_value.median) / RS.last_value.iqr;
-    const timeScaled = (timeYears     - RS.time_rtend_rising.median) / RS.time_rtend_rising.iqr;
-
+  function parseYM(s){
+    if (!s || !/^\d{4}-\d{2}$/.test(s)) return null;
+    const [y,m] = s.split('-').map(Number);
+    return {y,m};
+  }
+  function monthsBetween(rt, psa){
+    const a = parseYM(rt), b = parseYM(psa);
+    if (!a || !b) return null;
+    return (b.y - a.y)*12 + (b.m - a.m);
+  }
+  function validateInputs(riskLabel, monthsDiff, psaValue){
+    const errs = [];
+    if (!(riskLabel in ORD_RISK_MAP)) errs.push('Select a valid risk category.');
+    if (monthsDiff === null) errs.push('Enter both dates (YYYY-MM).');
+    else if (monthsDiff <= 0) errs.push('First PSA date must be AFTER RT end (≥ 1 month).');
+    if (!(psaValue >= 1)) errs.push('First PSA measurement must be ≥ 1.');
+    return errs;
+  }
+  function toModelFeatures(riskLabel, psaValue, monthsDiff){
+    const riskOrd = ORD_RISK_MAP[riskLabel];
+    const timeYears = monthsDiff/12;
+    const lastScaled = (psaValue - RS.last_value.median) / RS.last_value.iqr;
+    const timeScaled = (timeYears - RS.time_rtend_rising.median) / RS.time_rtend_rising.iqr;
     return {riskOrd, lastScaled, timeScaled};
   }
-
-  // Basic validation
-  function validateInputs(x1, x2, x3) {
-    const errs = [];
-    if (!Number.isInteger(x1) || x1 < 1 || x1 > 5) errs.push("Risk category must be an integer from 1 to 5.");
-    if (!(x2 > 0)) errs.push("Time between RT end and first PSA must be greater than 0 (months).");
-    if (!(x3 >= 1)) errs.push("First PSA measurement must be ≥ 1.");
-    return errs;
+  function showErrors(errs){
+    bucket.textContent = 'Fix inputs'; bucket.className = 'pill bad';
+    caption.innerHTML = '<ul style="margin:0;padding-left:18px">' + errs.map(e=>`<li>${e}</li>`).join('') + '</ul>';
+    out.textContent = '—'; ring.style.setProperty('--deg','0deg');
+  }
+  function clearErrors() {
+    caption.textContent = '';
+    bucket.textContent = '—';
+    bucket.className = 'pill';
   }
 
   function update(){
-    const riskIn   = parseFloat(x1n.value);
-    const lastIn   = parseFloat(x3n.value);         // your UI: first PSA measurement
-    const timeMIn  = parseFloat(x2n.value);         // months
+    const riskLabel = riskSel?.value;
+    const monthsDiff = monthsBetween(rtEnd?.value, psaYM?.value);
+    const psaVal = parseFloat(x3n?.value);
 
-    if (![riskIn,lastIn,timeMIn].every(Number.isFinite)){ clearUI(); return; }
+    if (!Number.isFinite(psaVal)) { clearUI(); return; }
 
-    const errs = validateInputs(riskIn, timeMIn, lastIn);
-    if (errs.length) {
-      bucket.textContent = 'Fix inputs'; bucket.className = 'pill bad';
-      caption.innerHTML = '<ul style="margin:0;padding-left:18px">' + errs.map(e=>`<li>${e}</li>`).join('') + '</ul>';
-      out.textContent = '—'; ring.style.setProperty('--deg', '0deg');
-      return;
-    }
+    const errs = validateInputs(riskLabel, monthsDiff, psaVal);
+    if (errs.length){ showErrors(errs); return; }
+    clearErrors(); // ensure old error message disappears
 
-    // === Apply conversions + scaling before feeding the model ===
-    const {riskOrd, lastScaled, timeScaled} = toModelFeatures(riskIn, lastIn, timeMIn);
-
-    // Order must match your training feature order: [risk_ord, last_value_scaled, time_scaled]
+    const {riskOrd, lastScaled, timeScaled} = toModelFeatures(riskLabel, psaVal, monthsDiff);
     const z = B0 + B1*riskOrd + B2*lastScaled + B3*timeScaled;
     const p = σ(z);
 
     out.textContent = (p*100).toFixed(1) + '%';
-    ring.style.setProperty('--deg', (p*360).toFixed(1) + 'deg');
-
+    ring.style.setProperty('--deg', (p*360).toFixed(1)+'deg');
     const {text, cls} = classify(p);
-    bucket.textContent = text; bucket.className = 'pill ' + cls;
-
-    // Optional: show how inputs were transformed (handy for debugging)
-    // caption.textContent = `risk_ord=${riskOrd}, last'=${lastScaled.toFixed(3)}, time'=${timeScaled.toFixed(3)}`;
+    bucket.textContent = text; bucket.className = 'pill '+cls;
   }
 
-  el('calc').addEventListener('click', update);
-  el('reset').addEventListener('click', () => {
-    x1r.value = x1n.value = 1;      // risk defaults to 1..5
-    x2r.value = x2n.value = 1;      // 1 month
-    x3r.value = x3n.value = 1.0;    // 1.0 ng/mL
+  // Hook up events so it recalculates ASAP
+  riskSel?.addEventListener('change', update);
+  x3n?.addEventListener('input', update);
+  x3r?.addEventListener('input', update);
+
+  // Reset (if you have a button with id="reset")
+  const resetBtn = el('reset');
+  resetBtn?.addEventListener('click', () => {
+    if (riskSel) riskSel.value = 'Low';
+    if (rtEnd) rtEnd.value = '';
+    if (psaYM) psaYM.value = '';
+    if (x3r) x3r.value = 1.0;
+    if (x3n) x3n.value = 1.0;
     update();
   });
 
-  // initial
+  // initial defaults so it can compute immediately once dates are filled
+  if (x3n && !x3n.value) x3n.value = 1.0;
   update();
+</script>
+
+<!-- Flatpickr (keep these AFTER the elements exist) -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
+<script>
+  // Mount on the SAME ids used above
+  const fp1 = flatpickr("#rt_end", {
+    plugins: [new monthSelectPlugin({ shorthand:true, dateFormat:"Y-m", altFormat:"F Y" })],
+    allowInput: true,
+    onChange: update,     // <-- trigger compute when a valid month is picked/typed
+    onClose:  update
+  });
+  const fp2 = flatpickr("#psa_first", {
+    plugins: [new monthSelectPlugin({ shorthand:true, dateFormat:"Y-m", altFormat:"F Y" })],
+    allowInput: true,
+    onChange: update,
+    onClose:  update
+  });
 </script>
 
 </body>
